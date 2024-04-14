@@ -1,23 +1,11 @@
-From c3d9f8d6bcd7244a955ea57c9ae3dbd195b0f91d Mon Sep 17 00:00:00 2001
-From: Christopher Reinwardt <creinwar@ethz.ch>
-Date: Mon, 2 Jan 2023 22:48:47 +0100
-Subject: [PATCH] Add OpenTitan QSPI host driver
-
----
- drivers/spi/Kconfig         |   5 +
- drivers/spi/Makefile        |   1 +
- drivers/spi/spi-opentitan.c | 757 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 763 insertions(+)
- create mode 100644 drivers/spi/spi-opentitan.c
-
 diff --git a/drivers/spi/Kconfig b/drivers/spi/Kconfig
-index aadaea052f51..abd15f4be5c7 100644
+index 74ea6b6..7cf3e30 100644
 --- a/drivers/spi/Kconfig
 +++ b/drivers/spi/Kconfig
-@@ -565,6 +565,11 @@ config SPI_OMAP24XX
+@@ -564,6 +564,11 @@ config SPI_OMAP24XX
  	  SPI master controller for OMAP24XX and later Multichannel SPI
  	  (McSPI) modules.
- 
+
 +config SPI_OPENTITAN_QSPI
 +    tristate "OpenTitan SPI Host driver"
 +    help
@@ -27,7 +15,7 @@ index aadaea052f51..abd15f4be5c7 100644
  	tristate "DRA7xxx QSPI controller support"
  	depends on ARCH_OMAP2PLUS || COMPILE_TEST
 diff --git a/drivers/spi/Makefile b/drivers/spi/Makefile
-index 6fea5821662e..4e780ab642d3 100644
+index 6fea582..4e780ab 100644
 --- a/drivers/spi/Makefile
 +++ b/drivers/spi/Makefile
 @@ -80,6 +80,7 @@ obj-$(CONFIG_SPI_OCTEON)		+= spi-octeon.o
@@ -40,7 +28,7 @@ index 6fea5821662e..4e780ab642d3 100644
  obj-$(CONFIG_SPI_PIC32)			+= spi-pic32.o
 diff --git a/drivers/spi/spi-opentitan.c b/drivers/spi/spi-opentitan.c
 new file mode 100644
-index 000000000000..6e613f65fdf2
+index 0000000..42de53f
 --- /dev/null
 +++ b/drivers/spi/spi-opentitan.c
 @@ -0,0 +1,757 @@
@@ -178,7 +166,7 @@ index 000000000000..6e613f65fdf2
 +		dev_err(&master->dev, "Transfers must be multiples of 8 bit long\n");
 +		return -EINVAL;
 +	}
-+	
++
 +	if(flags & SPI_XFER_BEGIN){
 +		priv->cs_state = 1;
 +		iowrite32(priv->used_cs, priv->regs + REG_CSID);
@@ -193,7 +181,7 @@ index 000000000000..6e613f65fdf2
 +		}
 +		return 0;
 +	}
-+		
++
 +	if(dir >> 1){
 +	    unsigned int i = 0;
 +		// Take care of the word aligned part
@@ -210,12 +198,12 @@ index 000000000000..6e613f65fdf2
 +               	// 4 byte
 +                if(!((long int) dout & 0x3L)){
 +                	*((unsigned int *) tmp) = *((unsigned int *) (dout+4*i));
-+ 
++
 +                // 2 byte
 +                } else if (!((long int) dout & 0x1L)){
 +                	*((unsigned short *) tmp)     = *((unsigned short *) (dout+4*i));
 +                	*((unsigned short *) (tmp+2)) = *((unsigned short *) (dout+4*i+2));
-+ 
++
 +                // 1 byte
 +                } else {
 +                	tmp[0] = ((unsigned char *) dout)[4*i];
@@ -237,7 +225,7 @@ index 000000000000..6e613f65fdf2
 +				tmp[3] = ((unsigned char *) dout)[i*4];
 +				tmp[2] = ((num_bytes - i*4) >= 2) ? ((unsigned char *) dout)[i*4 + 1] : 0;
 +				tmp[1] = ((num_bytes - i*4) == 3) ? ((unsigned char *) dout)[i*4 + 2] : 0;
-+			
++
 +				// Cannot need filling as it would have been taken care of by the loop then
 +				tmp[0] = 0;
 +			} else {
@@ -245,11 +233,11 @@ index 000000000000..6e613f65fdf2
 +				tmp[0] = ((unsigned char *) dout)[i*4];
 +				tmp[1] = ((num_bytes - i*4) >= 2) ? ((unsigned char *) dout)[i*4 + 1] : 0;
 +				tmp[2] = ((num_bytes - i*4) == 3) ? ((unsigned char *) dout)[i*4 + 2] : 0;
-+			
++
 +				// Cannot need filling as it would have been taken care of by the loop then
 +				tmp[3] = 0;
 +			}
-+			
++
 +			iowrite32(*((unsigned int *) tmp), priv->regs + REG_TXDATA);
 +		}
 +	}
@@ -315,12 +303,12 @@ index 000000000000..6e613f65fdf2
 +                            	// 4 byte
 +                                if(!((long int) din & 0x3L)){
 +                                	*((unsigned int *) din) = word;
-+ 
++
 +                                // 2 byte
 +                                } else if (!((long int) din & 0x1L)) {
 +                                	*((unsigned short *) din)   =  word        & 0xFFFF;
 +                                	*((unsigned short *) din+2) = (word >> 16) & 0xFFFF;
-+ 
++
 +                                // 1 byte
 +                                } else {
 +                                	dst[0] =  word        & 0xFF;
@@ -389,7 +377,7 @@ index 000000000000..6e613f65fdf2
 +                	dev_err(&master->dev, "RX queue did not notify us about the last bytes\r\n");
 +                	return -1;
 +                }
-+        
++
 +				word = ioread32((volatile unsigned int *) (priv->regs + REG_RXDATA));
 +
 +				if(!priv->byte_order){
@@ -440,7 +428,7 @@ index 000000000000..6e613f65fdf2
 +			do {
 +				status = ioread32(priv->regs + REG_STATUS);
 +			} while((status >> 30) & 0x1);
-+ 		
++
 +		// What mode is this??
 +		} else {
 +			dev_err(&master->dev, "This direction is unknown: %d\n", dir);
@@ -472,7 +460,7 @@ index 000000000000..6e613f65fdf2
 +		unsigned long last_flags  = flags & SPI_XFER_END;
 +		unsigned int  num_txns    = (bitlen + OPENTITAN_QSPI_FIFO_DEPTH*8 - 1)/(OPENTITAN_QSPI_FIFO_DEPTH*8);
 +        unsigned int i;
-+		
++
 +		for(i = 0; i < num_txns; i++){
 +			unsigned long flags = (i == 0) ? first_flags :
 +					      		  (i == num_txns-1) ? last_flags  : 0;
@@ -489,7 +477,7 @@ index 000000000000..6e613f65fdf2
 +				in  = (void *) (din + i*OPENTITAN_QSPI_FIFO_DEPTH);
 +
 +			ret = opentitan_qspi_xfer_single(master, len, out, in, flags);
-+			
++
 +			if(ret)
 +				return ret;
 +		}
@@ -573,7 +561,7 @@ index 000000000000..6e613f65fdf2
 +		unsigned int err_status = ioread32(priv->regs + REG_ERROR_STATUS);
 +
 +		dev_err(NULL, "opentitan_qspi: error interrupt! error_status = 0x%x\r\n", err_status);
-+		
++
 +		// Badly handle the error by just clearing the flags
 +		iowrite32(0x1F, priv->regs + REG_ERROR_STATUS);
 +		iowrite32(0x1, priv->regs + REG_INTR_STATE);
@@ -626,7 +614,7 @@ index 000000000000..6e613f65fdf2
 +	} else {
 +		opentitan_qspi_set_speed(master, priv->cur_freq);
 +	}
-+	
++
 +	return opentitan_qspi_xfer(master, t->len*8, t->tx_buf, t->rx_buf, 0);
 +}
 +
@@ -645,7 +633,7 @@ index 000000000000..6e613f65fdf2
 +	priv = spi_master_get_devdata(master);
 +	init_completion(&priv->done);
 +	platform_set_drvdata(pdev, master);
-+	
++
 +	priv->regs = devm_platform_ioremap_resource(pdev, 0);
 +	if (IS_ERR(priv->regs)) {
 +		ret = PTR_ERR(priv->regs);
@@ -698,7 +686,7 @@ index 000000000000..6e613f65fdf2
 +	master->set_cs				= opentitan_qspi_set_cs;
 +	master->transfer_one		= opentitan_qspi_transfer_one;
 +
-+	pdev->dev.dma_mask = NULL; 
++	pdev->dev.dma_mask = NULL;
 +
 +	// Disable all interrupts
 +	iowrite32(0, priv->regs + REG_INTR_ENABLE);
@@ -777,7 +765,7 @@ index 000000000000..6e613f65fdf2
 +	// Disable all interrupts
 +	iowrite32(0, priv->regs + REG_INTR_ENABLE);
 +	iowrite32(0, priv->regs + REG_EVENT_ENABLE);
-+	
++
 +	return 0;
 +}
 +
@@ -801,6 +789,3 @@ index 000000000000..6e613f65fdf2
 +MODULE_AUTHOR("PULP Platform <info@pulp-platform.org");
 +MODULE_DESCRIPTION("OpenTitan SPI Host driver");
 +MODULE_LICENSE("GPL");
--- 
-2.16.5
-

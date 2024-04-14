@@ -1,15 +1,5 @@
-From a7c14f72c0a9e37ff97dca2ad51a4f2c179ebbe9 Mon Sep 17 00:00:00 2001
-From: Florian Zaruba <zarubaf@iis.ee.ethz.ch>
-Date: Tue, 21 May 2019 22:31:43 +0200
-Subject: [PATCH 6/7] Add Xilinx emaclite
-
----
- drivers/net/ethernet/xilinx/Kconfig           |  3 ++-
- drivers/net/ethernet/xilinx/xilinx_emaclite.c | 12 ++++++------
- 2 files changed, 8 insertions(+), 7 deletions(-)
-
 diff --git a/drivers/net/ethernet/xilinx/Kconfig b/drivers/net/ethernet/xilinx/Kconfig
-index d0d0d4fe9d40..739fbcf51848 100644
+index d0d0d4f..739fbcf 100644
 --- a/drivers/net/ethernet/xilinx/Kconfig
 +++ b/drivers/net/ethernet/xilinx/Kconfig
 @@ -6,6 +6,7 @@
@@ -30,7 +20,7 @@ index d0d0d4fe9d40..739fbcf51848 100644
  	help
  	  This driver supports the 10/100 Ethernet Lite from Xilinx.
 diff --git a/drivers/net/ethernet/xilinx/xilinx_emaclite.c b/drivers/net/ethernet/xilinx/xilinx_emaclite.c
-index 0c26f5bcc523..67a539d99740 100644
+index 02b95af..443c1d8 100644
 --- a/drivers/net/ethernet/xilinx/xilinx_emaclite.c
 +++ b/drivers/net/ethernet/xilinx/xilinx_emaclite.c
 @@ -97,7 +97,7 @@
@@ -60,19 +50,14 @@ index 0c26f5bcc523..67a539d99740 100644
  							 XEL_BUFFER_OFFSET);
  		else
  			return 0;	/* No data was available */
-@@ -1191,9 +1191,9 @@ static int xemaclite_of_probe(struct platform_device *ofdev)
+@@ -1185,8 +1185,8 @@ static int xemaclite_of_probe(struct platform_device *ofdev)
  	}
  
  	dev_info(dev,
--		 "Xilinx EmacLite at 0x%08X mapped to 0x%08X, irq=%d\n",
--		 (unsigned int __force)ndev->mem_start,
--		 (unsigned int __force)lp->base_addr, ndev->irq);
+-		 "Xilinx EmacLite at 0x%08X mapped to 0x%p, irq=%d\n",
+-		 (unsigned int __force)ndev->mem_start, lp->base_addr, ndev->irq);
 +		 "Xilinx EmacLite at 0x%p mapped to 0x%p, irq=%d\n",
-+		 (void *)ndev->mem_start,
-+		 lp->base_addr, ndev->irq);
++		 (void *)ndev->mem_start, lp->base_addr, ndev->irq);
  	return 0;
  
- error:
--- 
-2.25.1
-
+ put_node:
