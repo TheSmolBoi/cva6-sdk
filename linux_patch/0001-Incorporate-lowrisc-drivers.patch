@@ -23,7 +23,7 @@ index 451c25f..7f544b2 100644
  obj-$(CONFIG_MMC_TOSHIBA_PCI)	+= toshsd.o
  obj-$(CONFIG_MMC_BCM2835)	+= bcm2835.o
  obj-$(CONFIG_MMC_OWL)		+= owl-mmc.o
-+obj-$(CONFIG_MMC_LOWRISC)       += lowrisc_sd.o
++obj-$(CONFIG_MMC_LOWRISC)	+= lowrisc_sd.o
 
  obj-$(CONFIG_MMC_REALTEK_PCI)	+= rtsx_pci_sdmmc.o
  obj-$(CONFIG_MMC_REALTEK_USB)	+= rtsx_usb_sdmmc.o
@@ -932,7 +932,7 @@ index 0000000..cccdadc
 +	bool "Lowrisc devices"
 +	default y
 +	depends on RISCV
-+	---help---
++	help
 +	  If you have a network (Ethernet) card belonging to this class, say Y.
 +
 +	  Note that the answer to this question doesn't directly affect the
@@ -946,7 +946,7 @@ index 0000000..cccdadc
 +	tristate "Lowrisc 100MHz Ethernet Nexys4_DDR support"
 +	depends on RISCV
 +	select PHYLIB
-+	---help---
++	help
 +	  This driver supports the 100MHz Ethernet for Nexys4_DDR Digilent boards from Lowrisc.
 +
 +endif # NET_VENDOR_LOWRISC
