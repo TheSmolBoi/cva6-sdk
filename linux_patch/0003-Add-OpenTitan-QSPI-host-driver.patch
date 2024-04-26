@@ -88,7 +88,7 @@ index 0000000..42de53f
 +struct opentitan_qspi_priv {
 +	struct completion done;     /* wake-up from interrupt */
 +	unsigned int __iomem *regs;
-+  	unsigned int clk_freq; 		/* Peripheral clock frequency */
++	unsigned int clk_freq; 		/* Peripheral clock frequency */
 +	unsigned int max_freq; 		/* Max supported SPI frequency */
 +	unsigned int cur_freq;		/* Current SPI clock frequency */
 +	unsigned int cs_state; 		/* 0 = CS currently not asserted, 1 = CS currently asserted */
@@ -102,10 +102,10 @@ index 0000000..42de53f
 +{
 +	struct opentitan_qspi_priv *priv = spi_master_get_devdata(master);
 +	unsigned char csaat 	= !(flags & SPI_XFER_END) && (priv->cs_state || flags & SPI_XFER_BEGIN);
-+   	// Wait for the SPI host to be ready
-+   	unsigned int ready_timeout = OPENTITAN_QSPI_READY_TIMEOUT;
-+   	unsigned int status = 0;
-+    unsigned int command = 0;
++		// Wait for the SPI host to be ready
++		unsigned int ready_timeout = OPENTITAN_QSPI_READY_TIMEOUT;
++		unsigned int status = 0;
++	unsigned int command = 0;
 +
 +	if(flags & SPI_XFER_BEGIN){
 +		priv->cs_state = 1;
@@ -122,15 +122,15 @@ index 0000000..42de53f
 +		return 0;
 +	}
 +
-+    do {
-+    	status = ioread32((volatile unsigned int *) (priv->regs + REG_STATUS));
-+       	ready_timeout--;
-+    } while(!(status >> 31) && ready_timeout > 0);
++	do {
++		status = ioread32((volatile unsigned int *) (priv->regs + REG_STATUS));
++		ready_timeout--;
++	} while(!(status >> 31) && ready_timeout > 0);
 +
-+    if(ready_timeout == 0 && !(status >> 31)){
-+       	dev_err(&master->dev, "opentitan_qspi_issue_dummy: Ready did not assert. Status: 0x%x\r\n", status);
-+       	return -1;
-+    }
++	if(ready_timeout == 0 && !(status >> 31)){
++		dev_err(&master->dev, "opentitan_qspi_issue_dummy: Ready did not assert. Status: 0x%x\r\n", status);
++		return -1;
++	}
 +
 +	command = ((bitlen & 0x1FF) - 1) | ((csaat & 0x1) << 9);
 +	iowrite32(command, priv->regs + REG_COMMAND);
@@ -154,12 +154,12 @@ index 0000000..42de53f
 +	struct opentitan_qspi_priv *priv = spi_master_get_devdata(master);
 +	unsigned int num_bytes 	= bitlen/8;
 +	unsigned int command = 0;
-+    unsigned int status  = 0;
-+    unsigned int ready_timeout = OPENTITAN_QSPI_READY_TIMEOUT;
++	unsigned int status  = 0;
++	unsigned int ready_timeout = OPENTITAN_QSPI_READY_TIMEOUT;
 +	unsigned char csaat 	= !(flags & SPI_XFER_END) && (priv->cs_state || flags & SPI_XFER_BEGIN);
 +	unsigned char dir   	= (din != NULL) | ((dout != NULL) << 1);
 +
-+    if(!dout && !din)
++	if(!dout && !din)
 +		return opentitan_qspi_issue_dummy(master, bitlen, flags);
 +
 +	if(bitlen % 8 != 0){
