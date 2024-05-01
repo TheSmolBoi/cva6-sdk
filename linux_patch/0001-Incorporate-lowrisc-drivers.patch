@@ -1,35 +1,35 @@
 diff --git a/drivers/mmc/host/Kconfig b/drivers/mmc/host/Kconfig
-index 8fe4a0f..c1de2de 100644
+index 81f2c4e..9c3b647 100644
 --- a/drivers/mmc/host/Kconfig
 +++ b/drivers/mmc/host/Kconfig
-@@ -1021,6 +1021,12 @@ config MMC_BCM2835
-
+@@ -981,6 +981,12 @@ config MMC_BCM2835
+ 
  	  If unsure, say N.
-
+ 
 +config MMC_LOWRISC
-+        tristate "LowRISC SD/MMC Card Interface Driver"
-+        depends on RISCV
-+        help
-+          This selects the LowRISC SD-card driver based on Nexys4-DDR from Digilent
++	tristate "LowRISC SD/MMC Card Interface Driver"
++	depends on RISCV
++	help
++	  This selects the LowRISC SD-card driver based on Nexys4-DDR from Digilent
 +
  config MMC_MTK
  	tristate "MediaTek SD/MMC Card Interface support"
  	depends on HAS_DMA
 diff --git a/drivers/mmc/host/Makefile b/drivers/mmc/host/Makefile
-index 451c25f..7f544b2 100644
+index d0be446..f93c806 100644
 --- a/drivers/mmc/host/Makefile
 +++ b/drivers/mmc/host/Makefile
-@@ -77,6 +77,7 @@ obj-$(CONFIG_MMC_USDHI6ROL0)	+= usdhi6rol0.o
+@@ -70,6 +70,7 @@ obj-$(CONFIG_MMC_USDHI6ROL0)	+= usdhi6rol0.o
  obj-$(CONFIG_MMC_TOSHIBA_PCI)	+= toshsd.o
  obj-$(CONFIG_MMC_BCM2835)	+= bcm2835.o
  obj-$(CONFIG_MMC_OWL)		+= owl-mmc.o
 +obj-$(CONFIG_MMC_LOWRISC)	+= lowrisc_sd.o
-
+ 
  obj-$(CONFIG_MMC_REALTEK_PCI)	+= rtsx_pci_sdmmc.o
  obj-$(CONFIG_MMC_REALTEK_USB)	+= rtsx_usb_sdmmc.o
 diff --git a/drivers/mmc/host/lowrisc_sd.c b/drivers/mmc/host/lowrisc_sd.c
 new file mode 100644
-index 0000000..d2570eb
+index 0000000..50ad145
 --- /dev/null
 +++ b/drivers/mmc/host/lowrisc_sd.c
 @@ -0,0 +1,803 @@
@@ -895,32 +895,32 @@ index 0000000..8aa18fa
 +  int int_en, width_setting;
 +};
 diff --git a/drivers/net/ethernet/Kconfig b/drivers/net/ethernet/Kconfig
-index fad9a2c..8990a6c 100644
+index 5a274b9..21b1b51 100644
 --- a/drivers/net/ethernet/Kconfig
 +++ b/drivers/net/ethernet/Kconfig
-@@ -117,6 +117,7 @@ config LANTIQ_XRX200
- 	  Support for the PMAC of the Gigabit switch (GSWIP) inside the
- 	  Lantiq / Intel VRX200 VDSL SoC
-
+@@ -122,6 +122,7 @@ config LANTIQ_XRX200
+ 
+ source "drivers/net/ethernet/adi/Kconfig"
+ source "drivers/net/ethernet/litex/Kconfig"
 +source "drivers/net/ethernet/lowrisc/Kconfig"
  source "drivers/net/ethernet/marvell/Kconfig"
  source "drivers/net/ethernet/mediatek/Kconfig"
  source "drivers/net/ethernet/mellanox/Kconfig"
 diff --git a/drivers/net/ethernet/Makefile b/drivers/net/ethernet/Makefile
-index f8f38dc..6d1cfda 100644
+index 0d872d4..35388f3 100644
 --- a/drivers/net/ethernet/Makefile
 +++ b/drivers/net/ethernet/Makefile
-@@ -50,6 +50,7 @@ obj-$(CONFIG_JME) += jme.o
+@@ -55,6 +55,7 @@ obj-$(CONFIG_JME) += jme.o
  obj-$(CONFIG_KORINA) += korina.o
  obj-$(CONFIG_LANTIQ_ETOP) += lantiq_etop.o
  obj-$(CONFIG_LANTIQ_XRX200) += lantiq_xrx200.o
 +obj-$(CONFIG_NET_VENDOR_LOWRISC) += lowrisc/
+ obj-$(CONFIG_NET_VENDOR_LITEX) += litex/
  obj-$(CONFIG_NET_VENDOR_MARVELL) += marvell/
  obj-$(CONFIG_NET_VENDOR_MEDIATEK) += mediatek/
- obj-$(CONFIG_NET_VENDOR_MELLANOX) += mellanox/
 diff --git a/drivers/net/ethernet/lowrisc/Kconfig b/drivers/net/ethernet/lowrisc/Kconfig
 new file mode 100644
-index 0000000..cccdadc
+index 0000000..ab95f70
 --- /dev/null
 +++ b/drivers/net/ethernet/lowrisc/Kconfig
 @@ -0,0 +1,26 @@
@@ -964,7 +964,7 @@ index 0000000..4eb3ade
 +CFLAGS_lowrisc_100MHz.o := -DDEBUG
 diff --git a/drivers/net/ethernet/lowrisc/lowrisc_100MHz.c b/drivers/net/ethernet/lowrisc/lowrisc_100MHz.c
 new file mode 100644
-index 0000000..4984e7b
+index 0000000..46b2dc0
 --- /dev/null
 +++ b/drivers/net/ethernet/lowrisc/lowrisc_100MHz.c
 @@ -0,0 +1,830 @@
